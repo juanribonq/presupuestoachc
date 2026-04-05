@@ -65,7 +65,8 @@ La primera vez que abras la app, verás una pantalla de bienvenida donde debes c
 
 ### Sección INICIO
 - Muestra resumen del mes: ingresos, presupuesto, gastado, disponible
-- Lista de servicios pendientes por pagar
+- Lista de servicios pendientes por pagar (con badge en el ícono)
+- Lista de servicios ya pagados (con fondo verde)
 - Alertas si te pasaste del presupuesto
 
 ### Sección INGRESOS
@@ -75,10 +76,12 @@ La primera vez que abras la app, verás una pantalla de bienvenida donde debes c
 
 ### Sección GRUPOS
 - 11 grupos con presupuesto asignado
+- **Para registrar gastos: Toca el grupo que quieres**
 - Cada grupo muestra:
   - Barra de progreso (verde, amarilla o roja)
   - Total gastado vs presupuesto
   - Lo que queda disponible
+  - Indicación "👉 Toca para registrar gastos"
 
 **Los 11 grupos son:**
 - Servicios (fijo)
@@ -96,9 +99,18 @@ La primera vez que abras la app, verás una pantalla de bienvenida donde debes c
 **Tipos de grupos:**
 
 1. **Fijos** (Servicios, Administración, Salud):
-   - Ítems predefinidos
-   - Puedes guardar números de referencia
-   - Marca como pagado al ingresar el valor
+   - **Ítems predefinidos** (Agua, Luz, Internet, etc.):
+     - Los detalles de pago (sitio web, referencia) se configuran **una sola vez en Ajustes**
+     - Cada vez que vayas a pagar, verás estos detalles para consultarlos
+     - **Al pagar**: Ingresas el valor y presionas "✓ Confirmar pago"
+     - Se mantienen mes a mes (vuelven a 0 pero no se borran)
+   - **Botón "+ Agregar Otros"**: Para gastos adicionales que puedan presentarse
+     - Ej: En Servicios un gasto extraordinario, en Salud un medicamento
+     - Estos items "Otros" **NO se copian al siguiente mes** (se borran al cerrar)
+     - Tienen badge azul "Otros" para distinguirlos
+     - Puedes eliminarlos completamente si te equivocaste
+   - Los servicios pagados se mueven a la sección "Pagados ✓" con fondo verde
+   - Puedes "Deshacer Pago" si te equivocaste
 
 2. **Especial** (Impuestos):
    - Un solo campo para el valor mensual
@@ -116,6 +128,10 @@ La primera vez que abras la app, verás una pantalla de bienvenida donde debes c
 ### Sección AJUSTES
 - Cambia tu nombre
 - Edita presupuestos de cada grupo
+- **Detalles de pago**: Configura cómo se paga cada servicio fijo (sitio web, referencia)
+  - Esta información se guarda permanentemente
+  - Se muestra en Grupos cada vez que vayas a pagar
+  - Solo la editas aquí, una vez
 - **Descarga respaldo**: Guarda todos tus datos en un archivo
 - **Restaurar respaldo**: Recupera datos desde un archivo
 
@@ -123,6 +139,42 @@ La primera vez que abras la app, verás una pantalla de bienvenida donde debes c
 - Botón verde con calculadora (abajo a la derecha)
 - Súmale rápidamente todas las facturas
 - Cierra tocando fuera de la calculadora
+
+---
+
+## Ejemplo: Cómo configurar y pagar servicios
+
+### Primera vez (configurar detalles en Ajustes):
+1. Ve a **Ajustes** ⚙️
+2. Baja hasta "Detalles de pago (Servicios fijos)"
+3. Encuentra "Servicios > Agua"
+4. Toca "✏️ Editar"
+5. Completa:
+   - **Cómo pagar**: "PSE en www.acueducto.com"
+   - **Referencia**: "Usuario 987654321"
+6. Guarda
+7. **Listo** - Esto queda guardado para siempre
+
+### Cada mes (pagar):
+1. Ve a **Grupos** > **Servicios**
+2. Toca "Agua"
+3. Ves la información que configuraste en Ajustes:
+   - **Cómo pagar**: PSE en www.acueducto.com
+   - **Referencia**: Usuario 987654321
+4. Copias la referencia, pagas en el sitio web
+5. Ingresas el **Valor pagado**: $50.000
+6. Presionas **"✓ Confirmar pago"**
+7. ¡Listo! Se mueve a "Pagados ✓" con fondo verde
+
+**Nota:** Los detalles de pago solo se configuran una vez en Ajustes y se usan todos los meses.
+
+### Agregar un gasto adicional ("Otros"):
+1. Ve a **Grupos** > **Servicios** (o cualquier grupo fijo)
+2. En la parte inferior, toca **"+ Agregar Otros"**
+3. Escribe la descripción (Ej: "Reparación urgente")
+4. Ingresa el valor pagado
+5. ¡Listo! Aparece en "Pagados ✓" con badge azul "Otros"
+6. Este item **NO se copiará al siguiente mes** (se borra al cerrar el mes)
 
 ---
 
@@ -146,7 +198,8 @@ Sí, pero debes pasar los respaldos manualmente entre dispositivos.
 ### ¿Qué pasa al cerrar el mes?
 - Se archiva todo el mes en Historial
 - **Los presupuestos se copian automáticamente al nuevo mes** (no hay que configurarlos otra vez)
-- Los ítems fijos vuelven a 0 (pero conservan números de referencia)
+- Los ítems fijos **predefinidos** vuelven a 0 (Agua, Luz, etc. se mantienen pero sin valor)
+- Los ítems "Otros" de grupos fijos **se borran completamente** (no se copian al siguiente mes)
 - Los gastos libres se borran completamente
 - Los ingresos se vacían
 - Empieza un mes nuevo limpio listo para usar
@@ -156,6 +209,9 @@ Puedes editar los presupuestos en cualquier momento desde Ajustes. Los cambios s
 
 ### ¿Tengo que configurar los presupuestos cada mes?
 No. Los presupuestos se configuran solo una vez al inicio, y luego se copian automáticamente mes a mes. Solo tienes que cambiarlos si quieres ajustar algún valor.
+
+### ¿Y los detalles de pago (referencias, sitios web)?
+Se configuran **una sola vez en Ajustes** y se conservan para siempre. Cada mes solo ingresas el valor al pagar. Si cambia algún dato (número de usuario, sitio web), lo editas desde Ajustes > Detalles de pago.
 
 ---
 

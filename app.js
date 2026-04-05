@@ -28,6 +28,7 @@ let estado = {
     mesActual: obtenerMesActualKey(),
     seccionActiva: 'inicio',
     configurado: false,
+    detallesPagoServicios: {}, // Detalles permanentes por servicio: { 'Servicios-Agua': { detallesPago: '...', referencia: '...' } }
     meses: {}
 };
 
@@ -54,6 +55,17 @@ function formatearPesos(valor) {
 
 function parsearPesos(texto) {
     return parseInt(texto.replace(/\D/g, '')) || 0;
+}
+
+function obtenerDetallesPago(grupoNombre, itemNombre) {
+    const key = `${grupoNombre}-${itemNombre}`;
+    return estado.detallesPagoServicios[key] || { detallesPago: '', referencia: '' };
+}
+
+function guardarDetallesPago(grupoNombre, itemNombre, detallesPago, referencia) {
+    const key = `${grupoNombre}-${itemNombre}`;
+    estado.detallesPagoServicios[key] = { detallesPago, referencia };
+    guardarDatos();
 }
 
 // ============================================
@@ -89,7 +101,7 @@ function inicializarMesActual() {
                 tipo: g.tipo,
                 items: g.tipo === 'fijo' ? g.items.map(nombre => ({
                     nombre,
-                    referencia: '',
+                    predefinido: true, // Items predefinidos se mantienen mes a mes
                     valor: 0,
                     pagado: false
                 })) : [],
@@ -113,19 +125,23 @@ function crearNuevoMes() {
         return;
     }
 
-    // Crear nuevo mes copiando presupuestos y referencias del mes anterior
+    // Crear nuevo mes copiando presupuestos del mes anterior
     estado.meses[estado.mesActual] = {
         ingresos: [],
         grupos: mesAnterior.grupos.map(grupo => ({
             nombre: grupo.nombre,
             presupuesto: grupo.presupuesto, // Copiar presupuesto del mes anterior
             tipo: grupo.tipo,
-            items: grupo.tipo === 'fijo' ? grupo.items.map(item => ({
-                nombre: item.nombre,
-                referencia: item.referencia, // Copiar referencia
-                valor: 0, // Resetear valor
-                pagado: false // Resetear estado
-            })) : [], // Items libres vacíos
+            items: grupo.tipo === 'fijo'
+                ? grupo.items
+                    .filter(item => item.predefinido) // Solo copiar items predefinidos
+                    .map(item => ({
+                        nombre: item.nombre,
+                        predefinido: true,
+                        valor: 0, // Resetear valor
+                        pagado: false // Resetear estado
+                    }))
+                : [], // Items libres vacíos
             gastado: 0 // Resetear gastado
         })),
         notas: '',
@@ -200,6 +216,7 @@ function renderizarInicio() {
     const totalGastado = calcularTotalGastado();
     const disponible = totalIngresos - totalGastado;
     const serviciosPendientes = obtenerServiciosPendientes();
+    const serviciosPagados = obtenerServiciosPagados();
 
     let html = '';
 
@@ -246,6 +263,23 @@ function renderizarInicio() {
     } else {
         html += '<div class="alerta info">';
         html += '¡Bien hecho! No hay servicios pendientes por pagar';
+        html += '</div>';
+    }
+
+    // Servicios pagados
+    if (serviciosPagados.length > 0) {
+        html += '<div class="tarjeta">';
+        html += '<h2>Servicios pagados ✓</h2>';
+        html += '<div class="lista-items">';
+        serviciosPagados.forEach(servicio => {
+            html += '<div class="item item-pagado">';
+            html += `<div class="item-header">`;
+            html += `<span class="item-nombre">${servicio.grupo} - ${servicio.nombre}</span>`;
+            html += `<span class="item-valor">${formatearPesos(servicio.valor)}</span>`;
+            html += `</div>`;
+            html += '</div>';
+        });
+        html += '</div>';
         html += '</div>';
     }
 
@@ -299,6 +333,27 @@ function obtenerServiciosPendientes() {
     });
 
     return pendientes;
+}
+
+function obtenerServiciosPagados() {
+    const mes = obtenerMesActual();
+    const pagados = [];
+
+    (mes.grupos || []).forEach(grupo => {
+        if (grupo.tipo === 'fijo') {
+            grupo.items.forEach(item => {
+                if (item.pagado && item.valor > 0) {
+                    pagados.push({
+                        grupo: grupo.nombre,
+                        nombre: item.nombre,
+                        valor: item.valor
+                    });
+                }
+            });
+        }
+    });
+
+    return pagados;
 }
 
 function actualizarBadgeNotificaciones() {
@@ -434,6 +489,10 @@ function renderizarGrupos() {
         html += `<span>Quedan: ${formatearPesos(Math.max(0, grupo.presupuesto - gastado))}</span>`;
         html += `</div>`;
 
+        html += `<div class="grupo-accion">`;
+        html += `<span>👉 Toca para registrar gastos</span>`;
+        html += `</div>`;
+
         html += `</div>`;
     });
 
@@ -484,39 +543,103 @@ function abrirDetalleGrupo(index) {
 }
 
 function renderizarGrupoFijo(grupo, grupoIndex) {
-    let html = '<div class="lista-items mt-20">';
+    let html = '';
+
+    // Separar items en pendientes y pagados
+    const pendientes = [];
+    const pagados = [];
 
     grupo.items.forEach((item, itemIndex) => {
-        html += '<div class="item">';
-        html += `<div class="item-header">`;
-        html += `<strong>${item.nombre}</strong>`;
-        if (item.pagado) {
-            html += `<span class="item-estado pagado">Pagado</span>`;
+        if (item.pagado && item.valor > 0) {
+            pagados.push({ item, itemIndex });
         } else {
-            html += `<span class="item-estado pendiente">Pendiente</span>`;
+            pendientes.push({ item, itemIndex });
         }
-        html += `</div>`;
-
-        html += `<label>Referencia:</label>`;
-        html += `<input type="text" value="${item.referencia || ''}" onchange="actualizarReferencia(${grupoIndex}, ${itemIndex}, this.value)">`;
-
-        html += `<label>Valor pagado:</label>`;
-        html += `<input type="text" inputmode="numeric" value="${item.valor > 0 ? formatearPesos(item.valor) : ''}"
-                        onchange="actualizarValorFijo(${grupoIndex}, ${itemIndex}, this.value)" placeholder="$0">`;
-
-        if (item.valor > 0) {
-            html += `<button class="secundario" onclick="limpiarPagoFijo(${grupoIndex}, ${itemIndex})">Deshacer Pago</button>`;
-        }
-
-        html += '</div>';
     });
 
-    // Para Salud, permitir agregar medicamentos
-    if (grupo.nombre === 'Salud') {
-        html += `<button onclick="agregarMedicamento(${grupoIndex})">+ Agregar Medicamento</button>`;
+    // Sección PENDIENTES
+    if (pendientes.length > 0) {
+        html += '<h3 class="seccion-titulo">Pendientes</h3>';
+        html += '<div class="lista-items">';
+
+        pendientes.forEach(({ item, itemIndex }) => {
+            // Obtener detalles de pago desde configuración global
+            const detalles = obtenerDetallesPago(grupo.nombre, item.nombre);
+
+            html += '<div class="item">';
+            html += `<div class="item-header">`;
+            html += `<strong>${item.nombre}</strong>`;
+            html += `<span class="item-estado pendiente">Pendiente</span>`;
+            html += `</div>`;
+
+            // Mostrar detalles de pago si existen (solo lectura)
+            if (detalles.detallesPago) {
+                html += `<div class="info-pago">`;
+                html += `<strong>Cómo pagar:</strong> ${detalles.detallesPago}`;
+                html += `</div>`;
+            }
+
+            // Mostrar referencia si existe (solo lectura)
+            if (detalles.referencia) {
+                html += `<div class="info-pago">`;
+                html += `<strong>Referencia:</strong> ${detalles.referencia}`;
+                html += `</div>`;
+            }
+
+            // Campo para ingresar el valor pagado
+            html += `<label class="mt-20">Valor pagado:</label>`;
+            html += `<input type="text" inputmode="numeric" id="valor-pago-${grupoIndex}-${itemIndex}" value="${item.valor > 0 ? formatearPesos(item.valor) : ''}" placeholder="$0">`;
+
+            html += `<button class="mt-20" onclick="confirmarPagoFijo(${grupoIndex}, ${itemIndex})">✓ Confirmar pago</button>`;
+
+            html += '</div>';
+        });
+
+        html += '</div>';
     }
 
-    html += '</div>';
+    // Permitir agregar "Otros" en todos los grupos fijos
+    html += `<button class="mt-20" onclick="agregarOtroItemFijo(${grupoIndex})">+ Agregar Otros</button>`;
+
+    // Sección PAGADOS
+    if (pagados.length > 0) {
+        html += '<h3 class="seccion-titulo mt-20">Pagados ✓</h3>';
+        html += '<div class="lista-items">';
+
+        pagados.forEach(({ item, itemIndex }) => {
+            // Obtener detalles de pago desde configuración global (solo para predefinidos)
+            const detalles = item.predefinido ? obtenerDetallesPago(grupo.nombre, item.nombre) : { detallesPago: '', referencia: '' };
+
+            html += '<div class="item item-pagado">';
+            html += `<div class="item-header">`;
+            html += `<strong>${item.nombre}</strong>`;
+            if (!item.predefinido) {
+                html += `<span class="item-estado" style="background: #2196F3; color: white; font-size: 12px;">Otros</span>`;
+            }
+            html += `<span class="item-valor">${formatearPesos(item.valor)}</span>`;
+            html += `</div>`;
+
+            if (detalles.detallesPago) {
+                html += `<div class="texto-pequeno">💳 ${detalles.detallesPago}</div>`;
+            }
+            if (detalles.referencia) {
+                html += `<div class="texto-pequeno">📋 Ref: ${detalles.referencia}</div>`;
+            }
+
+            // Si es predefinido, solo "Deshacer Pago". Si es "Otros", mostrar también "Eliminar"
+            if (item.predefinido) {
+                html += `<button class="secundario pequeno mt-20" onclick="limpiarPagoFijo(${grupoIndex}, ${itemIndex})">Deshacer Pago</button>`;
+            } else {
+                html += `<button class="secundario pequeno mt-20" onclick="limpiarPagoFijo(${grupoIndex}, ${itemIndex})">Deshacer Pago</button>`;
+                html += `<button class="peligro pequeno" onclick="eliminarItemOtro(${grupoIndex}, ${itemIndex})">Eliminar</button>`;
+            }
+
+            html += '</div>';
+        });
+
+        html += '</div>';
+    }
+
     return html;
 }
 
@@ -561,19 +684,60 @@ function cerrarModalGrupo() {
     }
 }
 
-function actualizarReferencia(grupoIndex, itemIndex, valor) {
-    const mes = obtenerMesActual();
-    mes.grupos[grupoIndex].items[itemIndex].referencia = valor;
-    guardarDatos();
+function editarDetallesServicio(grupoNombre, itemNombre) {
+    const detalles = obtenerDetallesPago(grupoNombre, itemNombre);
+
+    const modal = document.getElementById('modal-editar-detalles');
+    document.getElementById('editar-nombre-item').textContent = `${grupoNombre} - ${itemNombre}`;
+    document.getElementById('editar-detalles-pago').value = detalles.detallesPago || '';
+    document.getElementById('editar-referencia').value = detalles.referencia || '';
+
+    modal.dataset.grupoNombre = grupoNombre;
+    modal.dataset.itemNombre = itemNombre;
+    modal.classList.add('activo');
 }
 
-function actualizarValorFijo(grupoIndex, itemIndex, valor) {
-    const mes = obtenerMesActual();
+function cerrarModalEditarDetalles() {
+    document.getElementById('modal-editar-detalles').classList.remove('activo');
+}
+
+function guardarDetallesServicio() {
+    const modal = document.getElementById('modal-editar-detalles');
+    const grupoNombre = modal.dataset.grupoNombre;
+    const itemNombre = modal.dataset.itemNombre;
+
+    const detallesPagoTexto = document.getElementById('editar-detalles-pago').value.trim();
+    const referencia = document.getElementById('editar-referencia').value.trim();
+
+    guardarDetallesPago(grupoNombre, itemNombre, detallesPagoTexto, referencia);
+
+    cerrarModalEditarDetalles();
+
+    // Refrescar la vista actual
+    if (estado.seccionActiva === 'ajustes') {
+        renderizarAjustes();
+    }
+}
+
+function confirmarPagoFijo(grupoIndex, itemIndex) {
+    const input = document.getElementById(`valor-pago-${grupoIndex}-${itemIndex}`);
+    const valor = input.value;
     const valorNum = parsearPesos(valor);
+
+    if (valorNum <= 0) {
+        alert('Por favor ingresa un valor mayor a $0');
+        return;
+    }
+
+    const mes = obtenerMesActual();
     mes.grupos[grupoIndex].items[itemIndex].valor = valorNum;
-    mes.grupos[grupoIndex].items[itemIndex].pagado = valorNum > 0;
+    mes.grupos[grupoIndex].items[itemIndex].pagado = true;
     guardarDatos();
     abrirDetalleGrupo(grupoIndex);
+
+    if (estado.seccionActiva === 'inicio') {
+        renderizarInicio();
+    }
 }
 
 function limpiarPagoFijo(grupoIndex, itemIndex) {
@@ -586,30 +750,49 @@ function limpiarPagoFijo(grupoIndex, itemIndex) {
     }
 }
 
+function eliminarItemOtro(grupoIndex, itemIndex) {
+    if (confirm('¿Eliminar este item? Esta acción no se puede deshacer.')) {
+        const mes = obtenerMesActual();
+        mes.grupos[grupoIndex].items.splice(itemIndex, 1);
+        guardarDatos();
+        abrirDetalleGrupo(grupoIndex);
+
+        if (estado.seccionActiva === 'inicio') {
+            renderizarInicio();
+        }
+    }
+}
+
 function actualizarValorEspecial(grupoIndex, valor) {
     const mes = obtenerMesActual();
     mes.grupos[grupoIndex].gastado = parsearPesos(valor);
     guardarDatos();
 }
 
-function agregarMedicamento(grupoIndex) {
-    const nombre = prompt('Nombre del medicamento:');
+function agregarOtroItemFijo(grupoIndex) {
+    const mes = obtenerMesActual();
+    const grupo = mes.grupos[grupoIndex];
+
+    const nombre = prompt(`Descripción del gasto adicional de ${grupo.nombre}:`);
     if (!nombre) return;
 
     const valor = prompt('Valor pagado:');
     const valorNum = parsearPesos(valor);
     if (valorNum <= 0) return;
 
-    const mes = obtenerMesActual();
     mes.grupos[grupoIndex].items.push({
         nombre,
-        referencia: '',
+        predefinido: false, // Items "otros" no se copian al siguiente mes
         valor: valorNum,
         pagado: true
     });
 
     guardarDatos();
     abrirDetalleGrupo(grupoIndex);
+
+    if (estado.seccionActiva === 'inicio') {
+        renderizarInicio();
+    }
 }
 
 function agregarGastoLibre(grupoIndex) {
@@ -906,6 +1089,37 @@ function renderizarAjustes() {
         html += `<input type="text" inputmode="numeric" value="${formatearPesos(grupo.presupuesto)}"
                         onchange="actualizarPresupuesto(${index}, this.value)">`;
         html += '</div>';
+    });
+    html += '</div>';
+
+    // Detalles de pago de servicios fijos
+    html += '<div class="tarjeta">';
+    html += '<h2>Detalles de pago (Servicios fijos)</h2>';
+    html += '<p class="texto-pequeno mb-20">Configura cómo se paga cada servicio. Esta información se mantendrá en todos los meses.</p>';
+
+    mes.grupos.forEach((grupo, grupoIndex) => {
+        if (grupo.tipo === 'fijo') {
+            html += `<h3 class="mt-20">${grupo.nombre}</h3>`;
+            grupo.items.forEach((item, itemIndex) => {
+                html += `<div class="item" style="margin-bottom: 15px;">`;
+                html += `<strong>${item.nombre}</strong>`;
+                html += `<button class="secundario pequeno" onclick="editarDetallesServicio('${grupo.nombre}', '${item.nombre}')">✏️ Editar</button>`;
+
+                const detalles = obtenerDetallesPago(grupo.nombre, item.nombre);
+                if (detalles.detallesPago || detalles.referencia) {
+                    if (detalles.detallesPago) {
+                        html += `<div class="texto-pequeno mt-20">💳 ${detalles.detallesPago}</div>`;
+                    }
+                    if (detalles.referencia) {
+                        html += `<div class="texto-pequeno">📋 ${detalles.referencia}</div>`;
+                    }
+                } else {
+                    html += `<div class="texto-pequeno mt-20" style="color: var(--gris-oscuro);">Sin configurar</div>`;
+                }
+
+                html += `</div>`;
+            });
+        }
     });
     html += '</div>';
 

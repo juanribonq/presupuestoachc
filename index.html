@@ -152,6 +152,32 @@
         </div>
     </div>
 
+    <!-- Modal: Editar Detalles de Pago -->
+    <div id="modal-editar-detalles" class="modal">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h2 class="modal-titulo">Editar detalles de pago</h2>
+                <button class="btn-cerrar" onclick="cerrarModalEditarDetalles()">×</button>
+            </div>
+            <h3 id="editar-nombre-item" style="margin-bottom: 20px; color: var(--verde-oscuro);"></h3>
+            <div class="form-group">
+                <label>Cómo pagar:</label>
+                <input type="text" id="editar-detalles-pago" placeholder="Ej: PSE en www.acueducto.com">
+                <small style="display: block; margin-top: 5px; color: var(--gris-oscuro);">
+                    Escribe cómo se paga este servicio (sitio web, app, banco, etc.)
+                </small>
+            </div>
+            <div class="form-group">
+                <label>Referencia / Usuario / No. Cliente:</label>
+                <input type="text" id="editar-referencia" placeholder="Ej: Usuario 123456789">
+                <small style="display: block; margin-top: 5px; color: var(--gris-oscuro);">
+                    Número de usuario, cliente o referencia para copiar al pagar
+                </small>
+            </div>
+            <button onclick="guardarDetallesServicio()">Guardar</button>
+        </div>
+    </div>
+
     <!-- Navegación inferior -->
     <nav class="nav-inferior">
         <div class="nav-item activo" data-seccion="inicio">

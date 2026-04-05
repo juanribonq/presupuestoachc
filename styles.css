@@ -248,6 +248,34 @@ label {
     color: var(--texto);
 }
 
+.item-pagado {
+    background: #e8f5e9;
+    border-left: 4px solid var(--verde);
+}
+
+.seccion-titulo {
+    font-size: 18px;
+    color: var(--gris-oscuro);
+    margin-top: 20px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--gris-medio);
+}
+
+.info-pago {
+    background: #f0f7ff;
+    border-left: 3px solid #2196F3;
+    padding: 10px 15px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+.info-pago strong {
+    color: #1976D2;
+}
+
 /* Grupos */
 .grupo {
     background: white;
@@ -315,6 +343,22 @@ label {
     font-size: 16px;
     color: var(--gris-oscuro);
     margin-top: 10px;
+}
+
+.grupo-accion {
+    text-align: center;
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed var(--gris-medio);
+    color: var(--verde-oscuro);
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.grupo:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+    transition: all 0.2s ease;
 }
 
 /* Navegación inferior */
