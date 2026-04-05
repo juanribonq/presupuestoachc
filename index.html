@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4CAF50">
+    <title>Mi Presupuesto - Cristina</title>
+    <link rel="manifest" href="./manifest.json">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="icon" type="image/png" href="./icon-192.png">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <h1 id="header-saludo">Hola Cristina 👋</h1>
+        <div class="mes-actual" id="header-mes">Mayo 2025</div>
+    </header>
+
+    <!-- Contenedor principal -->
+    <div class="container">
+        <!-- SECCIÓN: INICIO -->
+        <section id="seccion-inicio" class="seccion activa">
+            <div id="contenido-inicio"></div>
+        </section>
+
+        <!-- SECCIÓN: INGRESOS -->
+        <section id="seccion-ingresos" class="seccion">
+            <div id="contenido-ingresos"></div>
+        </section>
+
+        <!-- SECCIÓN: GRUPOS -->
+        <section id="seccion-grupos" class="seccion">
+            <div id="contenido-grupos"></div>
+        </section>
+
+        <!-- SECCIÓN: HISTORIAL -->
+        <section id="seccion-historial" class="seccion">
+            <div id="contenido-historial"></div>
+        </section>
+
+        <!-- SECCIÓN: AJUSTES -->
+        <section id="seccion-ajustes" class="seccion">
+            <div id="contenido-ajustes"></div>
+        </section>
+    </div>
+
+    <!-- Botón calculadora flotante -->
+    <button class="btn-calculadora" onclick="toggleCalculadora()">🧮</button>
+
+    <!-- Modal Calculadora -->
+    <div id="modal-calculadora" class="modal-calculadora">
+        <div class="calculadora">
+            <div class="calc-display" id="calc-display">$0</div>
+            <div class="calc-botones">
+                <button class="calc-btn" onclick="clickCalculadora('7')">7</button>
+                <button class="calc-btn" onclick="clickCalculadora('8')">8</button>
+                <button class="calc-btn" onclick="clickCalculadora('9')">9</button>
+                <button class="calc-btn operador" onclick="clickCalculadora('/')">/</button>
+
+                <button class="calc-btn" onclick="clickCalculadora('4')">4</button>
+                <button class="calc-btn" onclick="clickCalculadora('5')">5</button>
+                <button class="calc-btn" onclick="clickCalculadora('6')">6</button>
+                <button class="calc-btn operador" onclick="clickCalculadora('*')">×</button>
+
+                <button class="calc-btn" onclick="clickCalculadora('1')">1</button>
+                <button class="calc-btn" onclick="clickCalculadora('2')">2</button>
+                <button class="calc-btn" onclick="clickCalculadora('3')">3</button>
+                <button class="calc-btn operador" onclick="clickCalculadora('-')">-</button>
+
+                <button class="calc-btn" onclick="clickCalculadora('0')">0</button>
+                <button class="calc-btn limpiar" onclick="clickCalculadora('C')">C</button>
+                <button class="calc-btn operador" onclick="clickCalculadora('+')">+</button>
+                <button class="calc-btn igual" onclick="clickCalculadora('=')">=</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Agregar Ingreso -->
+    <div id="modal-ingreso" class="modal">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h2 class="modal-titulo">Agregar Ingreso</h2>
+                <button class="btn-cerrar" onclick="cerrarModalIngreso()">×</button>
+            </div>
+            <div class="form-group">
+                <label>Nombre del ingreso:</label>
+                <input type="text" id="ingreso-nombre" placeholder="Ej: Pensión, Arriendo...">
+            </div>
+            <div class="form-group">
+                <label>Valor:</label>
+                <input type="text" id="ingreso-valor" inputmode="numeric" placeholder="$0">
+            </div>
+            <button onclick="agregarIngreso()">Guardar</button>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle Grupo -->
+    <div id="modal-grupo" class="modal">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h2 class="modal-titulo" id="modal-grupo-titulo">Grupo</h2>
+                <button class="btn-cerrar" onclick="cerrarModalGrupo()">×</button>
+            </div>
+            <div id="contenido-modal-grupo"></div>
+        </div>
+    </div>
+
+    <!-- Modal: Agregar Gasto Libre -->
+    <div id="modal-gasto-libre" class="modal">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h2 class="modal-titulo">Agregar Gasto</h2>
+                <button class="btn-cerrar" onclick="cerrarModalGastoLibre()">×</button>
+            </div>
+            <div class="form-group">
+                <label>Descripción:</label>
+                <input type="text" id="gasto-descripcion" placeholder="Ej: Compra supermercado...">
+            </div>
+            <div class="form-group">
+                <label>Valor:</label>
+                <input type="text" id="gasto-valor" inputmode="numeric" placeholder="$0">
+            </div>
+            <div class="form-group">
+                <label>Fecha:</label>
+                <input type="date" id="gasto-fecha">
+            </div>
+            <button onclick="guardarGastoLibre()">Guardar</button>
+        </div>
+    </div>
+
+    <!-- Modal: Detalle Mes -->
+    <div id="modal-detalle-mes" class="modal">
+        <div class="modal-contenido">
+            <div class="modal-header">
+                <h2 class="modal-titulo" id="modal-detalle-titulo">Detalle del Mes</h2>
+                <button class="btn-cerrar" onclick="cerrarModalDetalleMes()">×</button>
+            </div>
+            <div id="contenido-detalle-mes"></div>
+        </div>
+    </div>
+
+    <!-- Modal: Configuración Inicial -->
+    <div id="modal-config-inicial" class="modal" style="background: rgba(0,0,0,0.95);">
+        <div class="modal-contenido" style="max-height: 90vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h2 class="modal-titulo">¡Bienvenida! 👋</h2>
+            </div>
+            <div id="contenido-config-inicial"></div>
+        </div>
+    </div>
+
+    <!-- Navegación inferior -->
+    <nav class="nav-inferior">
+        <div class="nav-item activo" data-seccion="inicio">
+            <div class="nav-icono">🏠</div>
+            <div>Inicio</div>
+            <div class="nav-badge" style="display: none;">0</div>
+        </div>
+        <div class="nav-item" data-seccion="ingresos">
+            <div class="nav-icono">💵</div>
+            <div>Ingresos</div>
+        </div>
+        <div class="nav-item" data-seccion="grupos">
+            <div class="nav-icono">📊</div>
+            <div>Grupos</div>
+        </div>
+        <div class="nav-item" data-seccion="historial">
+            <div class="nav-icono">📅</div>
+            <div>Historial</div>
+        </div>
+        <div class="nav-item" data-seccion="ajustes">
+            <div class="nav-icono">⚙️</div>
+            <div>Ajustes</div>
+        </div>
+    </nav>
+
+    <!-- Scripts -->
+    <script src="./app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos temporales
+*.tmp
+*.bak
+*~
+
+# Node modules (por si instalas algo más adelante)
+node_modules/
+
+# Configuración privada (valores de presupuesto)
+CONFIGURACION_PRIVADA.md

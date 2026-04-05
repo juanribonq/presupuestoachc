@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Íconos - Mi Presupuesto</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            margin: 20px auto;
+            display: block;
+        }
+        .info {
+            background: #f0f0f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Generador de Íconos</h1>
+    <div class="info">
+        <p>Haz clic en los botones para descargar los íconos necesarios para la PWA</p>
+    </div>
+
+    <canvas id="canvas192" width="192" height="192"></canvas>
+    <button onclick="descargar(192)">Descargar icon-192.png</button>
+
+    <canvas id="canvas512" width="512" height="512"></canvas>
+    <button onclick="descargar(512)">Descargar icon-512.png</button>
+
+    <script>
+        function generarIcono(size) {
+            const canvas = document.getElementById(`canvas${size}`);
+            const ctx = canvas.getContext('2d');
+
+            // Fondo verde
+            ctx.fillStyle = '#4CAF50';
+            ctx.fillRect(0, 0, size, size);
+
+            // Símbolo de peso colombiano
+            ctx.fillStyle = 'white';
+            ctx.font = `bold ${size * 0.5}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('$', size / 2, size / 2);
+
+            // Borde redondeado (opcional, se ve mejor)
+            ctx.strokeStyle = '#388E3C';
+            ctx.lineWidth = size * 0.02;
+            ctx.strokeRect(0, 0, size, size);
+        }
+
+        function descargar(size) {
+            const canvas = document.getElementById(`canvas${size}`);
+            const link = document.createElement('a');
+            link.download = `icon-${size}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        // Generar ambos íconos al cargar
+        generarIcono(192);
+        generarIcono(512);
+    </script>
+</body>
+</html>
